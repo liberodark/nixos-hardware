@@ -388,6 +388,7 @@ See code for all available configurations.
 | [MSI GS60 2QE](msi/gs60)                                                          | `<nixos-hardware/msi/gs60>`                             | `msi-gs60`                             |
 | [MSI GL62/CX62](msi/gl62)                                                         | `<nixos-hardware/msi/gl62>`                             | `msi-gl62`                             |
 | [MSI GL65 10SDR-492](msi/gl65/10SDR-492)                                          | `<nixos-hardware/msi/gl65/10SDR-492>`                   | `msi-gl65-10SDR-492`                   |
+| [MACHINIST X99 MR9D PLUS](machinist/x99-mr9d-plus)                                | `<nixos-hardware/machinist/x99-mr9d-plus>`              | `machinist-x99-mr9d-plus`             |
 | [Malibal Aon S1](malibal/aon/s1)         |                                        | `<nixos-hardware/malibal/aon/s1>`                       | `malibal-aon-s1`                       |
 | [Microchip Icicle Kit](microchip/icicle-kit)                                      | `<nixos-hardware/microchip/icicle-kit>`                 | `microchip-icicle-kit`                 |
 | [Microsoft Surface Go](microsoft/surface/surface-go)                              | `<nixos-hardware/microsoft/surface/surface-go>`         | `microsoft-surface-go`                 |

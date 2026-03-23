@@ -354,6 +354,7 @@
           letsnote-cf-lx4 = import ./panasonic/letsnote/cf-lx4;
           linglong-nova-studio = import ./linglong/nova-studio;
           malibal-aon-s1-intel = import ./malibal/aon/s1;
+          machinist-x99-mr9d-plus = import ./machinist/x99-mr9d-plus;
           mechrevo-gm5hg0a = import ./mechrevo/GM5HG0A;
           microchip-icicle-kit = import ./microchip/icicle-kit;
           microsoft-surface-go = import ./microsoft/surface/surface-go;
