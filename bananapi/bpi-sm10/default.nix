@@ -12,5 +12,5 @@
   # which selects k3_com260_ifx.dtb.
   imports = [ ../../spacemit/k3-pico-itx ];
 
-  hardware.deviceTree.name = lib.mkForce "spacemit/k3_com260_ifx.dtb";
+  hardware.deviceTree.name = lib.mkForce "spacemit/k3-com260-ifx.dtb";
 }
