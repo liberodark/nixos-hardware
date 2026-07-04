@@ -6,19 +6,19 @@
 }@args:
 
 let
-  modDirVersion = "7.3.0";
+  modDirVersion = "7.4.0-rc1";
 in
 buildLinux (
   args
   // {
     inherit modDirVersion;
-    version = "7.3-spacemit-k3";
+    version = "7.4-rc1-spacemit-k3";
 
     src = fetchFromGitHub {
       owner = "torvalds";
       repo = "linux";
-      tag = "v7.3";
-      hash = "sha256-ca8CMAWKe1yzkQIn8sasUQxMLqdtfvC+wBFtX3819Zk=";
+      tag = "v7.4-rc1";
+      hash = "";
     };
 
     defconfig = "defconfig";
@@ -216,7 +216,7 @@ buildLinux (
       DEBUG_INFO_BTF_MODULES = lib.mkForce no;
     };
 
-    extraMeta.branch = "7.3";
+    extraMeta.branch = "7.4-rc1";
   }
   // (args.argsOverride or { })
 )
