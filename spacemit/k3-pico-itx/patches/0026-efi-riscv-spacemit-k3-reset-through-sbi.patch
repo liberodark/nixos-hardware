@@ -1,0 +1,42 @@
+diff --git a/drivers/firmware/efi/riscv-runtime.c b/drivers/firmware/efi/riscv-runtime.c
+index 60cdf7bf1..2ebedb395 100644
+--- a/drivers/firmware/efi/riscv-runtime.c
++++ b/drivers/firmware/efi/riscv-runtime.c
+@@ -14,6 +14,7 @@
+ #include <linux/io.h>
+ #include <linux/memblock.h>
+ #include <linux/mm_types.h>
++#include <linux/of.h>
+ #include <linux/pgalloc.h>
+ #include <linux/pgtable.h>
+ #include <linux/preempt.h>
+@@ -26,6 +27,7 @@
+ #include <asm/cacheflush.h>
+ #include <asm/efi.h>
+ #include <asm/mmu.h>
++#include <asm/sbi.h>
+ 
+ static bool __init efi_virtmap_init(void)
+ {
+@@ -118,6 +120,21 @@ static int __init riscv_enable_runtime_services(void)
+ 	efi_native_runtime_setup();
+ 	set_bit(EFI_RUNTIME_SERVICES, &efi.flags);
+ 
++	/*
++	 * SpacemiT K3 EDK2 (edk2-spacemit 0.0.7 to 0.0.9 at least): the
++	 * runtime ResetSystem() goes through MapRegToGcdMmioSpace(), that is
++	 * gDS->GetMemorySpaceDescriptor(), a boot service reached through a
++	 * pointer SetVirtualAddressMap() never converted. Every reboot then
++	 * faults in the EFI page table and kills init. The K3 OpenSBI resets
++	 * the machine through SBI SRST, which machine_restart() falls back to
++	 * when EFI does not offer ResetSystem().
++	 */
++	if (of_machine_is_compatible("spacemit,k3") &&
++	    sbi_probe_extension(SBI_EXT_SRST) > 0) {
++		efi.runtime_supported_mask &= ~EFI_RT_SUPPORTED_RESET_SYSTEM;
++		pr_info("SpacemiT K3: EFI ResetSystem() is broken, resetting through SBI\n");
++	}
++
+ 	return 0;
+ }
+ early_initcall(riscv_enable_runtime_services);

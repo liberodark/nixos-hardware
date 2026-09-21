@@ -1,25 +1,8 @@
-From: liberodark <liberodark@gmail.com>
-Subject: [PATCH] cpufreq: spacemit: k3: per-cluster DVFS via cpufreq-dt (v4)
-
-Multi-clock OPP support for the K3 X100 clusters (PLL3/PLL4 switching,
-614 MHz - 2.4 GHz) hooked into cpufreq-dt.
-
-v4: review fixes :
-- cache the PLL clock handles at first transition instead of
-  of_clk_get_by_name() on every frequency change (reference +
-  memory leak in the hot path), drop the dead opp-hz/microvolt scan
-  and its leaked of_node reference
-- serialize the cross-cluster PLL manipulation with a mutex (two
-  policies can transition concurrently)
-- policy notifier: only act on CPUFREQ_CREATE_POLICY, check
-  _find_opp_table() result, drop the opp_table reference
-- fold the redundant nested turbo condition
-
-Signed-off-by: liberodark <liberodark@gmail.com>
----
+diff --git a/arch/riscv/boot/dts/spacemit/k3.dtsi b/arch/riscv/boot/dts/spacemit/k3.dtsi
+index af7c678d7..a72761c7b 100644
 --- a/arch/riscv/boot/dts/spacemit/k3.dtsi
 +++ b/arch/riscv/boot/dts/spacemit/k3.dtsi
-@@ -187,9 +187,135 @@
+@@ -190,9 +190,135 @@ cpus: cpus {
  		#size-cells = <0>;
  		timebase-frequency = <24000000>;
  
@@ -33,115 +16,115 @@ Signed-off-by: liberodark <liberodark@gmail.com>
 +			opp2400000000 {
 +				opp-hz = /bits/ 64 <2400000000>, /bits/ 64 <2400000000>;
 +				opp-microvolt = <1000000 1000000 1004000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp2300000000 {
 +				opp-hz = /bits/ 64 <2300000000>, /bits/ 64 <2300000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp2200000000 {
 +				opp-hz = /bits/ 64 <2200000000>, /bits/ 64 <2200000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp2150000000 {
 +				opp-hz = /bits/ 64 <2150000000>, /bits/ 64 <2150000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp2100000000 {
 +				opp-hz = /bits/ 64 <2100000000>, /bits/ 64 <2100000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp2000000000 {
 +				opp-hz = /bits/ 64 <2000000000>, /bits/ 64 <2000000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1900000000 {
 +				opp-hz = /bits/ 64 <1900000000>, /bits/ 64 <1900000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1850000000 {
 +				opp-hz = /bits/ 64 <1850000000>, /bits/ 64 <1850000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1800000000 {
 +				opp-hz = /bits/ 64 <1800000000>, /bits/ 64 <1800000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1700000000 {
 +				opp-hz = /bits/ 64 <1700000000>, /bits/ 64 <1700000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1600000000 {
 +				opp-hz = /bits/ 64 <1600000000>, /bits/ 64 <1600000000>;
 +				opp-microvolt = <880000 880000 884000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1500000000 {
 +				opp-hz = /bits/ 64 <1500000000>, /bits/ 64 <1500000000>;
 +				opp-microvolt = <850000 850000 854000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1400000000 {
 +				opp-hz = /bits/ 64 <1400000000>, /bits/ 64 <1400000000>;
 +				opp-microvolt = <850000 850000 854000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1300000000 {
 +				opp-hz = /bits/ 64 <1300000000>, /bits/ 64 <1300000000>;
 +				opp-microvolt = <850000 850000 854000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1200000000 {
 +				opp-hz = /bits/ 64 <1200000000>, /bits/ 64 <1200000000>;
 +				opp-microvolt = <850000 850000 854000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1100000000 {
 +				opp-hz = /bits/ 64 <1100000000>, /bits/ 64 <1100000000>;
 +				opp-microvolt = <850000 850000 854000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp1000000000 {
 +				opp-hz = /bits/ 64 <1000000000>, /bits/ 64 <1000000000>;
 +				opp-microvolt = <800000 800000 804000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
-+			opp819000000 {
++			opp819200000 {
 +				opp-hz = /bits/ 64 <819200000>, /bits/ 64 <819200000>;
 +				opp-microvolt = <800000 800000 804000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +
 +			opp614400000 {
 +				opp-hz = /bits/ 64 <614400000>, /bits/ 64 <614400000>;
 +				opp-microvolt = <800000 800000 804000>;
-+				clock-latency-ns = <200000>;
++				clock-latency-ns = <1000000>;
 +			};
 +		};
 +
@@ -155,7 +138,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  			device_type = "cpu";
  			reg = <0>;
  			riscv,isa-base = "rv64i";
-@@ -232,6 +358,10 @@
+@@ -235,6 +361,10 @@ cpu0_intc: interrupt-controller {
  		cpu_1: cpu@1 {
  			compatible = "spacemit,x100", "riscv";
  			model = "Spacemit(R) X100";
@@ -166,7 +149,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  			device_type = "cpu";
  			reg = <1>;
  			riscv,isa-base = "rv64i";
-@@ -274,6 +404,10 @@
+@@ -277,6 +407,10 @@ cpu1_intc: interrupt-controller {
  		cpu_2: cpu@2 {
  			compatible = "spacemit,x100", "riscv";
  			model = "Spacemit(R) X100";
@@ -177,7 +160,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  			device_type = "cpu";
  			reg = <2>;
  			riscv,isa-base = "rv64i";
-@@ -316,6 +450,10 @@
+@@ -319,6 +453,10 @@ cpu2_intc: interrupt-controller {
  		cpu_3: cpu@3 {
  			compatible = "spacemit,x100", "riscv";
  			model = "Spacemit(R) X100";
@@ -188,7 +171,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  			device_type = "cpu";
  			reg = <3>;
  			riscv,isa-base = "rv64i";
-@@ -358,6 +496,10 @@
+@@ -361,6 +499,10 @@ cpu3_intc: interrupt-controller {
  		cpu_4: cpu@4 {
  			compatible = "spacemit,x100", "riscv";
  			model = "Spacemit(R) X100";
@@ -199,7 +182,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  			device_type = "cpu";
  			reg = <4>;
  			riscv,isa-base = "rv64i";
-@@ -400,6 +542,10 @@
+@@ -403,6 +545,10 @@ cpu4_intc: interrupt-controller {
  		cpu_5: cpu@5 {
  			compatible = "spacemit,x100", "riscv";
  			model = "Spacemit(R) X100";
@@ -210,7 +193,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  			device_type = "cpu";
  			reg = <5>;
  			riscv,isa-base = "rv64i";
-@@ -442,6 +588,10 @@
+@@ -445,6 +591,10 @@ cpu5_intc: interrupt-controller {
  		cpu_6: cpu@6 {
  			compatible = "spacemit,x100", "riscv";
  			model = "Spacemit(R) X100";
@@ -221,7 +204,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  			device_type = "cpu";
  			reg = <6>;
  			riscv,isa-base = "rv64i";
-@@ -484,6 +634,10 @@
+@@ -487,6 +637,10 @@ cpu6_intc: interrupt-controller {
  		cpu_7: cpu@7 {
  			compatible = "spacemit,x100", "riscv";
  			model = "Spacemit(R) X100";
@@ -232,6 +215,47 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  			device_type = "cpu";
  			reg = <7>;
  			riscv,isa-base = "rv64i";
+diff --git a/drivers/cpufreq/Kconfig b/drivers/cpufreq/Kconfig
+index db83f3365..55d24a23a 100644
+--- a/drivers/cpufreq/Kconfig
++++ b/drivers/cpufreq/Kconfig
+@@ -204,6 +204,22 @@ config CPU_FREQ_GOV_SCHEDUTIL
+ 
+ comment "CPU frequency scaling drivers"
+ 
++config SPACEMIT_K3_CPUFREQ
++	bool "SpacemiT K3 CPU frequency scaling"
++	depends on ARCH_SPACEMIT && OF && COMMON_CLK
++	default ARCH_SPACEMIT
++	select CPUFREQ_DT
++	select CPUFREQ_DT_PLATDEV
++	select PM_OPP
++	help
++	  CPU frequency scaling support for the SpacemiT K3 SoC. Works
++	  with cpufreq-dt; a transition notifier reprograms the cluster
++	  PLLs for turbo frequencies. The cluster voltage is scaled
++	  through the clst-supply regulator when the board wires it,
++	  otherwise the frequency is capped at the firmware boot rate.
++	  Say Y on K3: without it, generic cpufreq-dt rejects the K3
++	  two-clock OPP table at boot.
++
+ config CPUFREQ_DT
+ 	tristate "Generic DT based cpufreq driver"
+ 	depends on HAVE_CLK && OF
+diff --git a/drivers/cpufreq/Makefile b/drivers/cpufreq/Makefile
+index 6c7a39b7f..9e67740b4 100644
+--- a/drivers/cpufreq/Makefile
++++ b/drivers/cpufreq/Makefile
+@@ -15,6 +15,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_COMMON)		+= cpufreq_governor.o
+ obj-$(CONFIG_CPU_FREQ_GOV_ATTR_SET)	+= cpufreq_governor_attr_set.o
+ 
+ obj-$(CONFIG_CPUFREQ_DT)		+= cpufreq-dt.o
++obj-$(CONFIG_SPACEMIT_K3_CPUFREQ)	+= spacemit-k3-cpufreq.o
+ obj-$(CONFIG_CPUFREQ_DT_RUST)		+= rcpufreq_dt.o
+ obj-$(CONFIG_CPUFREQ_DT_PLATDEV)	+= cpufreq-dt-platdev.o
+ obj-$(CONFIG_CPUFREQ_VIRT)		+= virtual-cpufreq.o
+diff --git a/drivers/cpufreq/cpufreq-dt.c b/drivers/cpufreq/cpufreq-dt.c
+index 7d5079fd1..238497797 100644
 --- a/drivers/cpufreq/cpufreq-dt.c
 +++ b/drivers/cpufreq/cpufreq-dt.c
 @@ -24,6 +24,7 @@
@@ -242,7 +266,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  struct private_data {
  	struct list_head node;
  
-@@ -33,9 +34,11 @@
+@@ -33,9 +34,11 @@ struct private_data {
  	bool have_static_opps;
  	int opp_token;
  };
@@ -254,7 +278,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  static struct private_data *cpufreq_dt_find_data(int cpu)
  {
  	struct private_data *priv;
-@@ -47,6 +50,24 @@
+@@ -47,6 +50,24 @@ static struct private_data *cpufreq_dt_find_data(int cpu)
  
  	return NULL;
  }
@@ -279,9 +303,31 @@ Signed-off-by: liberodark <liberodark@gmail.com>
  
  static int set_target(struct cpufreq_policy *policy, unsigned int index)
  {
+@@ -165,6 +186,11 @@ static int dt_cpufreq_early_init(struct device *dev, int cpu)
+ 	if (cpufreq_dt_find_data(cpu))
+ 		return 0;
+ 
++	/* SpacemiT K3 clusters: multi-clock OPPs, own regulator name */
++	ret = spacemit_k3_cpufreq_early_init(dev, cpu);
++	if (ret)
++		return ret < 0 ? ret : 0;
++
+ 	cpu_dev = get_cpu_device(cpu);
+ 	if (!cpu_dev)
+ 		return -EPROBE_DEFER;
+diff --git a/drivers/cpufreq/cpufreq-dt.h b/drivers/cpufreq/cpufreq-dt.h
+index fc1889aeb..4ef8edde5 100644
 --- a/drivers/cpufreq/cpufreq-dt.h
 +++ b/drivers/cpufreq/cpufreq-dt.h
-@@ -24,4 +24,20 @@
+@@ -10,6 +10,7 @@
+ #include <linux/types.h>
+ 
+ struct cpufreq_policy;
++struct device;
+ 
+ struct cpufreq_dt_platform_data {
+ 	bool have_governor_per_policy;
+@@ -24,4 +25,31 @@ struct cpufreq_dt_platform_data {
  
  struct platform_device *cpufreq_dt_pdev_register(struct device *dev);
  
@@ -299,90 +345,278 @@ Signed-off-by: liberodark <liberodark@gmail.com>
 +
 +struct private_data *cpufreq_dt_find_data(int cpu);
 +void cpufreq_dt_add_data(struct private_data *priv);
++/*
++ * Returns 1 when the CPU was set up by the SpacemiT K3 driver, 0 when it is
++ * not a K3 cluster CPU (generic path applies), a negative error otherwise
++ * (-EPROBE_DEFER while the cluster regulator is not registered yet).
++ */
++int spacemit_k3_cpufreq_early_init(struct device *dev, int cpu);
++#else
++static inline int spacemit_k3_cpufreq_early_init(struct device *dev, int cpu)
++{
++	return 0;
++}
 +#endif
 +
  #endif /* __CPUFREQ_DT_H__ */
---- a/drivers/cpufreq/Kconfig
-+++ b/drivers/cpufreq/Kconfig
-@@ -204,6 +204,18 @@
- 
- comment "CPU frequency scaling drivers"
- 
-+config SPACEMIT_K3_CPUFREQ
-+	bool "SpacemiT K3 CPU frequency scaling"
-+	depends on ARCH_SPACEMIT && OF && COMMON_CLK
-+	select CPUFREQ_DT
-+	select CPUFREQ_DT_PLATDEV
-+	select PM_OPP
-+	help
-+	  CPU frequency scaling support for the SpacemiT K3 SoC. Works
-+	  with cpufreq-dt; a transition notifier reprograms the cluster
-+	  PLLs for turbo frequencies. Voltage is left at the firmware
-+	  defaults (no regulator scaling).
-+
- config CPUFREQ_DT
- 	tristate "Generic DT based cpufreq driver"
- 	depends on HAVE_CLK && OF
---- a/drivers/cpufreq/Makefile
-+++ b/drivers/cpufreq/Makefile
-@@ -15,6 +15,7 @@
- obj-$(CONFIG_CPU_FREQ_GOV_ATTR_SET)	+= cpufreq_governor_attr_set.o
- 
- obj-$(CONFIG_CPUFREQ_DT)		+= cpufreq-dt.o
-+obj-$(CONFIG_SPACEMIT_K3_CPUFREQ)	+= spacemit-k3-cpufreq.o
- obj-$(CONFIG_CPUFREQ_DT_RUST)		+= rcpufreq_dt.o
- obj-$(CONFIG_CPUFREQ_DT_PLATDEV)	+= cpufreq-dt-platdev.o
- obj-$(CONFIG_CPUFREQ_VIRT)		+= virtual-cpufreq.o
---- a/drivers/opp/core.c
-+++ b/drivers/opp/core.c
-@@ -94,6 +94,16 @@
- static bool assert_single_clk(struct opp_table *opp_table,
- 			      unsigned int __always_unused index)
- {
-+	/*
-+	 * Multi-clock OPP tables driven by dev_pm_opp_config_clks_simple
-+	 * keep every clock at the rate of the same OPP entry, so
-+	 * frequency-based lookups can safely use the first rate.
-+	 */
-+	if (IS_ENABLED(CONFIG_SPACEMIT_K3_CPUFREQ) &&
-+	    opp_table->clk_count > 1 &&
-+	    opp_table->config_clks == dev_pm_opp_config_clks_simple)
-+		return true;
-+
- 	return !WARN_ON(opp_table->clk_count > 1);
- }
- 
+diff --git a/drivers/cpufreq/spacemit-k3-cpufreq.c b/drivers/cpufreq/spacemit-k3-cpufreq.c
+new file mode 100644
+index 000000000..fc0121b3a
 --- /dev/null
 +++ b/drivers/cpufreq/spacemit-k3-cpufreq.c
-@@ -0,0 +1,329 @@
+@@ -0,0 +1,812 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +
 +#include <linux/cpufreq.h>
 +#include <linux/kernel.h>
 +#include <linux/module.h>
 +#include <linux/init.h>
++#include <linux/cpu.h>
 +#include <linux/cpumask.h>
-+#include <linux/clk/clk-conf.h>
-+#include <linux/pm_qos.h>
++#include <linux/clk.h>
++#include <linux/delay.h>
 +#include <linux/notifier.h>
-+#include <linux/platform_device.h>
 +#include <linux/regulator/consumer.h>
 +#include <linux/mutex.h>
 +#include <linux/pm_opp.h>
 +#include <linux/device.h>
 +#include <linux/of.h>
++#include <linux/mfd/syscon.h>
++#include <linux/regmap.h>
 +#include <linux/slab.h>
++#include <linux/smp.h>
++#include <soc/spacemit/k3-syscon.h>
 +#include "../opp/opp.h"
 +#include "cpufreq-dt.h"
 +
 +#define TURBO0_FREQUENCY		(1000000000)
 +#define STABLE_FREQUENCY		(819200000)
 +
++/* Fixed PLL1 sources of the cluster muxes a cluster can be parked on */
++static const unsigned long spacemit_park_rates[] = {
++	STABLE_FREQUENCY, 614400000, 491520000,
++};
++
++/*
++ * Cluster 1 behind the clock framework's back: source 7 of the cluster 1
++ * mux is PLL4 or PLL3 depending on C1_SRC7_PLL_SEL (APMU_CPU_C1_CLK_CTRL
++ * bit 13), which the mainline clock driver does not model; it always
++ * shows PLL4. Firmware 1.0.5 (FSBL "Cluster0/2 should be same as
++ * Cluster1/3") sets it: both clusters then run from PLL3, and the clock
++ * framework gates PLL3 as soon as cls0 leaves it, with cluster 1 still
++ * on it -- that cluster loses its clock and the machine freezes. The OPP
++ * core happens to be safe (scaling down moves cls1 first, scaling up
++ * moves cls0 first), so only this driver has to care: cls1 is always
++ * parked before cls0, and PLL3's divide-by-one output (pll_src) is held
++ * from the retune to POSTCHANGE, so cluster 1 finds it running whichever
++ * cluster the OPP core moves first. Harmless when cluster 1 is on PLL4.
++ */
++#define K3_C1_SRC7_PLL3		BIT(13)
++
 +/* PLL handles cached at first transition (see spacemit_processor_notifier) */
 +static DEFINE_MUTEX(spacemit_pll_lock);
 +static bool spacemit_plls_cached;
-+static struct clk *spacemit_pll_clst0, *spacemit_pll_clst1;
-+static struct clk *spacemit_pll_src, *spacemit_clt_pll_src;
++static struct clk *spacemit_pll_clst0, *spacemit_pll_clst1, *spacemit_pll_src;
++
++/*
++ * Margins around a PLL retune: time for a PLL that was just switched off
++ * to really stop before it is reprogrammed, and settling time beyond its
++ * lock flag before the OPP layer moves a cluster onto it. They were added
++ * while chasing the firmware 1.0.5 freeze, which turned out to be
++ * K3_C1_SRC7_PLL3; they cost well under a millisecond per turbo
++ * transition and are kept. The references taken on the PLLs are dropped
++ * at POSTCHANGE.
++ */
++#define PLL_OFF_SETTLE_US	100
++#define PLL_LOCK_SETTLE_US	300
++
++/*
++ * Policies (first related CPU) holding a reference on pll_src (PLL3 through
++ * its divide-by-one output, which also keeps PLL3 on) / pll_clst1 (PLL4).
++ * Per policy, like the other masks below: cpufreq serializes PRECHANGE ->
++ * POSTCHANGE per policy only, two policies may be in flight at once.
++ * Protected by spacemit_pll_lock.
++ */
++static struct cpumask spacemit_pll_holding[2];
++
++static void spacemit_pll_hold(int cpu, struct device *cpu_dev,
++			      struct clk *clk, int idx)
++{
++	if (cpumask_test_cpu(cpu, &spacemit_pll_holding[idx]))
++		return;
++	if (clk_prepare_enable(clk))
++		dev_warn_ratelimited(cpu_dev, "%s did not lock\n",
++				     idx ? "pll_clst1" : "pll_src");
++	else
++		cpumask_set_cpu(cpu, &spacemit_pll_holding[idx]);
++}
++
++static void spacemit_pll_release(int cpu)
++{
++	if (cpumask_test_and_clear_cpu(cpu, &spacemit_pll_holding[0]))
++		clk_disable_unprepare(spacemit_pll_src);
++	if (cpumask_test_and_clear_cpu(cpu, &spacemit_pll_holding[1]))
++		clk_disable_unprepare(spacemit_pll_clst1);
++}
++
++/*
++ * Idle harts sit in WFI. Moving a cluster clock off its PLL, reprogramming
++ * that PLL and switching back while harts of the cluster are in WFI has been
++ * seen to leave those harts stuck on K3: they stop ticking and ignore IPIs,
++ * and every interrupt routed to them (I2C, NVMe queues) times out. Vendor
++ * Linux never has a hart in WFI at that point (idle harts are powered down
++ * through SBI HSM) and firmware retunes the PLLs with a single hart running.
++ * So for the whole transition, PRECHANGE to POSTCHANGE, keep every hart
++ * polling instead of WFI. idle_guard=0 turns this off, for bring-up.
++ *
++ * One bit per policy (its first related CPU): a failed transition is
++ * reported as PRECHANGE + POSTCHANGE again, and policies may overlap.
++ * cpu_idle_poll_ctrl() itself is a counter.
++ */
++static bool idle_guard = true;
++module_param(idle_guard, bool, 0444);
++MODULE_PARM_DESC(idle_guard, "keep idle harts out of WFI during frequency transitions (default: on)");
++
++static struct cpumask spacemit_idle_guarded;	/* protected by spacemit_pll_lock */
++/* Policies whose cluster clocks this driver parked, same key and lock */
++static struct cpumask spacemit_parked;
++
++static void spacemit_idle_guard_kick(void *unused)
++{
++	/* Nothing to do: being here means this hart is out of WFI */
++}
++
++/*
++ * Polling is forced first, then every other hart is made to run the
++ * (empty) function and we wait for it: on return no hart is in WFI any
++ * more, and none re-enters it until the guard is dropped.
++ */
++static void spacemit_harts_awake(void)
++{
++	cpu_idle_poll_ctrl(true);
++	smp_call_function(spacemit_idle_guard_kick, NULL, 1);
++}
++
++static void spacemit_harts_release(void)
++{
++	cpu_idle_poll_ctrl(false);
++}
++
++static void spacemit_idle_guard_begin(struct cpufreq_policy *policy)
++{
++	if (!idle_guard)
++		return;
++
++	if (cpumask_test_and_set_cpu(cpumask_first(policy->related_cpus),
++				     &spacemit_idle_guarded))
++		return;
++
++	spacemit_harts_awake();
++}
++
++static void spacemit_idle_guard_end(struct cpufreq_policy *policy)
++{
++	if (!cpumask_test_and_clear_cpu(cpumask_first(policy->related_cpus),
++					&spacemit_idle_guarded))
++		return;
++
++	spacemit_harts_release();
++}
++
++/*
++ * True when @clk currently runs from @pll, directly or through one divider
++ * (pll3_d1/pll3_d2 for cluster 0, pll4_d1/pll4_d2 for cluster 1). An unknown
++ * topology counts as fed, so the caller parks the clock to be safe.
++ */
++static bool spacemit_clk_fed_by(struct clk *clk, struct clk *pll)
++{
++	struct clk *parent = clk_get_parent(clk);
++	int depth;
++
++	if (IS_ERR_OR_NULL(parent))
++		return true;
++
++	for (depth = 0; depth < 2 && !IS_ERR_OR_NULL(parent); depth++) {
++		if (!IS_ERR_OR_NULL(pll) && clk_is_match(parent, pll))
++			return true;
++		parent = clk_get_parent(parent);
++	}
++
++	return false;
++}
++
++/*
++ * True when the cluster rail is known to cover @rate: no regulator in the
++ * table (every enabled OPP is then at or below the firmware boot rate), or
++ * the regulator reads back at least the OPP voltage. A failed read means no.
++ */
++static bool spacemit_rail_covers(struct opp_table *opp_table,
++				 struct device *cpu_dev, unsigned long rate)
++{
++	struct dev_pm_opp *opp;
++	unsigned long uV;
++	int cur;
++
++	if (!opp_table->regulators)
++		return true;
++
++	opp = dev_pm_opp_find_freq_exact(cpu_dev, rate, true);
++	if (IS_ERR(opp))
++		return false;
++	uV = dev_pm_opp_get_voltage(opp);
++	dev_pm_opp_put(opp);
++
++	cur = regulator_get_voltage(opp_table->regulators[0]);
++
++	return uV && cur >= (int)uV;
++}
++
++/*
++ * Move @clk to the highest fixed source at or below its current rate, so a
++ * cluster never runs faster on the voltage it has. -ERANGE when there is
++ * none (a cluster left below 491.52 MHz on a PLL divider).
++ */
++static int spacemit_park(struct clk *clk)
++{
++	unsigned long cur = clk_get_rate(clk);
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(spacemit_park_rates); i++) {
++		if (spacemit_park_rates[i] > cur)
++			continue;
++		if (clk_round_rate(clk, spacemit_park_rates[i]) != (long)spacemit_park_rates[i])
++			continue;
++		return clk_set_rate(clk, spacemit_park_rates[i]);
++	}
++
++	return -ERANGE;
++}
++
++static bool spacemit_is_parked(struct clk *clk)
++{
++	unsigned long cur = clk_get_rate(clk);
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(spacemit_park_rates); i++)
++		if (cur == spacemit_park_rates[i])
++			return true;
++
++	return false;
++}
++
++/*
++ * True when the OPP core's current OPP runs cls0 at @rate. The OPP core
++ * writes current_opp from dev_pm_opp_set_rate() without any lock of its
++ * own: this relies on cpufreq serializing the transitions of a policy,
++ * and this notifier runs inside one.
++ */
++static bool spacemit_opp_is_current(struct opp_table *opp_table,
++				    unsigned long rate)
++{
++	struct dev_pm_opp *opp = opp_table->current_opp;
++
++	return opp && dev_pm_opp_get_freq_indexed(opp, 0) == rate;
++}
 +
 +static int spacemit_processor_notifier(struct notifier_block *nb,
 +                                  unsigned long event, void *data)
@@ -390,10 +624,12 @@ Signed-off-by: liberodark <liberodark@gmail.com>
 +	int cpu;
 +	struct device *cpu_dev;
 +	struct cpufreq_freqs *freqs = (struct cpufreq_freqs *)data;
-+	struct cpufreq_policy *policy = ( struct cpufreq_policy *)freqs->policy;
++	struct cpufreq_policy *policy = freqs->policy;
 +	struct opp_table *opp_table;
-+	struct clk *pll_clst0, *pll_clst1, *pll_src, *clt_pll_src;
-+	int i;
++	struct clk *pll_clst0, *pll_clst1;
++	unsigned long new_rate = (unsigned long)freqs->new * 1000;
++	unsigned long old_rate;
++	int i, ret;
 +
 +	cpu = cpumask_first(policy->related_cpus);
 +	cpu_dev = get_cpu_device(cpu);
@@ -401,87 +637,216 @@ Signed-off-by: liberodark <liberodark@gmail.com>
 +	if (IS_ERR_OR_NULL(opp_table))
 +		return NOTIFY_DONE;
 +
++	/* Only the K3 cluster tables (cls0 + cls1) are ours */
++	if (opp_table->clk_count < 2 || !opp_table->clks) {
++		dev_pm_opp_put_opp_table(opp_table);
++		return NOTIFY_DONE;
++	}
++
++	if (event == CPUFREQ_POSTCHANGE) {
++		mutex_lock(&spacemit_pll_lock);
++		/*
++		 * A failed transition is rolled back by the core as PRECHANGE +
++		 * POSTCHANGE with old/new swapped, without target_index(): the
++		 * PRECHANGE below then parks the clusters and retunes the PLLs
++		 * for the old rate, and nobody would switch them back. Put the
++		 * clocks this driver parked back here, once cpufreq and the OPP
++		 * core agree on the rate and the rail reads back high enough
++		 * for it; the direction of old/new says nothing, the OPP layer
++		 * may have applied another OPP (and voltage) altogether. A
++		 * cluster stays parked, and remembered as such, rather than run
++		 * above its voltage. After a successful transition nothing is
++		 * left parked.
++		 */
++		if (cpumask_test_cpu(cpu, &spacemit_parked)) {
++			bool parked = false, checked = false, covered = false;
++
++			for (i = 0; i < opp_table->clk_count; ++i) {
++				if (!spacemit_is_parked(opp_table->clks[i]))
++					continue;
++				if (!checked) {
++					/*
++					 * Only follow a rate the OPP core agrees
++					 * on: after a failed transition its
++					 * current_opp is still the old one, while
++					 * this first POSTCHANGE carries the target
++					 * that failed; the rollback POSTCHANGE
++					 * that follows carries the old rate again.
++					 */
++					covered = spacemit_opp_is_current(opp_table, new_rate) &&
++						  spacemit_rail_covers(opp_table, cpu_dev, new_rate);
++					checked = true;
++				}
++				if (!covered) {
++					dev_warn_ratelimited(cpu_dev,
++						"cluster clock %d left parked at %lu kHz (%u kHz asked)\n",
++						i, clk_get_rate(opp_table->clks[i]) / 1000, freqs->new);
++					parked = true;
++					continue;
++				}
++				/*
++				 * The mux rounds to the nearest source, which
++				 * may be above the rate the rail was checked
++				 * for (a PLL left at a higher rate): then stay
++				 * parked.
++				 */
++				if (clk_round_rate(opp_table->clks[i], new_rate) > (long)new_rate)
++					ret = -ERANGE;
++				else
++					ret = clk_set_rate(opp_table->clks[i], new_rate);
++				if (ret) {
++					dev_warn_ratelimited(cpu_dev,
++						"cluster clock %d left parked at %lu kHz (%d)\n",
++						i, clk_get_rate(opp_table->clks[i]) / 1000, ret);
++					parked = true;
++				}
++			}
++			if (!parked)
++				cpumask_clear_cpu(cpu, &spacemit_parked);
++		}
++		/* The clusters hold their own references now */
++		if (spacemit_plls_cached)
++			spacemit_pll_release(cpu);
++		/* Let the idle harts go back to WFI */
++		spacemit_idle_guard_end(policy);
++		mutex_unlock(&spacemit_pll_lock);
++		dev_pm_opp_put_opp_table(opp_table);
++		return NOTIFY_OK;
++	}
++
++	mutex_lock(&spacemit_pll_lock);
++
++	/* PRECHANGE: no hart may sit in WFI until POSTCHANGE */
++	spacemit_idle_guard_begin(policy);
++
 +	/*
 +	 * Get the pll clk handles once and cache them: this notifier runs
 +	 * on every frequency transition, per-call of_clk_get_by_name()
-+	 * would leak a reference each time.
++	 * would leak a reference each time. Only cache a complete set, so
++	 * a transient lookup failure is retried on the next transition.
 +	 */
-+	mutex_lock(&spacemit_pll_lock);
 +	if (!spacemit_plls_cached) {
 +		spacemit_pll_clst0 = of_clk_get_by_name(opp_table->np, "pll_clst0");
 +		spacemit_pll_clst1 = of_clk_get_by_name(opp_table->np, "pll_clst1");
 +		spacemit_pll_src = of_clk_get_by_name(opp_table->np, "pll_src");
-+		spacemit_clt_pll_src = of_clk_get_by_name(opp_table->np, "clt_pll_src");
-+		spacemit_plls_cached = true;
++		if (!IS_ERR(spacemit_pll_clst0) && !IS_ERR(spacemit_pll_clst1) &&
++		    !IS_ERR(spacemit_pll_src)) {
++			spacemit_plls_cached = true;
++		} else {
++			if (!IS_ERR(spacemit_pll_clst0))
++				clk_put(spacemit_pll_clst0);
++			if (!IS_ERR(spacemit_pll_clst1))
++				clk_put(spacemit_pll_clst1);
++			if (!IS_ERR(spacemit_pll_src))
++				clk_put(spacemit_pll_src);
++			mutex_unlock(&spacemit_pll_lock);
++			dev_pm_opp_put_opp_table(opp_table);
++			return NOTIFY_DONE;
++		}
 +	}
 +	pll_clst0 = spacemit_pll_clst0;
 +	pll_clst1 = spacemit_pll_clst1;
-+	pll_src = spacemit_pll_src;
-+	clt_pll_src = spacemit_clt_pll_src;
 +
 +	if (event == CPUFREQ_PRECHANGE) {
++		if (new_rate > TURBO0_FREQUENCY) {
++			/*
++			 * Nothing to retune when both PLLs already run at the
++			 * target rate: the OPP layer just moves the muxes. This
++			 * is also what an out-of-sync notification (no
++			 * target_index() follows) looks like, and parking the
++			 * clusters for it would leave them parked. The PLLs
++			 * are still switched on below: the clusters may be
++			 * coming from a fixed source.
++			 */
++			if (clk_get_rate(pll_clst0) == new_rate &&
++			    clk_get_rate(pll_clst1) == new_rate)
++				goto relock;
 +
-+		if (freqs->new * 1000 > TURBO0_FREQUENCY) {
-+			if (freqs->old * 1000 > TURBO0_FREQUENCY) {
-+				for (i = 0; i < opp_table->clk_count; ++i)
-+					clk_set_rate(opp_table->clks[i], STABLE_FREQUENCY);
++			/*
++			 * The turbo PLLs are about to be reprogrammed: park
++			 * every cluster clock still fed by one of them
++			 * (directly or through a divider) on a fixed PLL1
++			 * source first. Look at the clock tree, not
++			 * at freqs->old: firmware may hand over below TURBO0
++			 * while still running from these PLLs. Clocks on a
++			 * fixed source are left alone, so the parked rate
++			 * never exceeds one the current voltage supports.
++			 * Last clock first: cls1 must leave PLL3 before cls0
++			 * does (see K3_C1_SRC7_PLL3).
++			 */
++			for (i = opp_table->clk_count - 1; i >= 0; --i) {
++				if (!spacemit_clk_fed_by(opp_table->clks[i], pll_clst0) &&
++				    !spacemit_clk_fed_by(opp_table->clks[i], pll_clst1))
++					continue;
++				ret = spacemit_park(opp_table->clks[i]);
++				if (ret) {
++					/*
++					 * Never retune a PLL a core still runs
++					 * from: leave both alone, the OPP layer
++					 * then picks what the muxes can offer.
++					 */
++					dev_warn_ratelimited(cpu_dev,
++						"cannot park cluster clock %d (%d), turbo PLLs left untouched\n",
++						i, ret);
++					goto relock;
++				}
++				cpumask_set_cpu(cpu, &spacemit_parked);
 +			}
 +
-+			/* 2.4G */
-+			if (!IS_ERR(pll_clst0))
-+				clk_set_rate(pll_clst0, freqs->new * 1000);
-+			if (!IS_ERR(pll_clst1))
-+				clk_set_rate(pll_clst1, freqs->new * 1000);
++			/* Let a PLL that was just switched off really stop */
++			if (cpumask_test_cpu(cpu, &spacemit_parked))
++				usleep_range(PLL_OFF_SETTLE_US, 2 * PLL_OFF_SETTLE_US);
++
++			/*
++			 * A failed retune cannot stop the transition: the OPP
++			 * layer rounds the target on cls0 and applies the OPP
++			 * (and voltage) the muxes can reach. That only holds
++			 * if both PLLs agree, so a PLL that cannot follow puts
++			 * the other one back and both stay where they were.
++			 */
++			old_rate = clk_get_rate(pll_clst0);
++			ret = clk_set_rate(pll_clst0, new_rate);
++			if (ret) {
++				dev_warn_ratelimited(cpu_dev, "pll_clst0 to %u kHz failed (%d), PLLs left untouched\n",
++						     freqs->new, ret);
++				goto relock;
++			}
++			ret = clk_set_rate(pll_clst1, new_rate);
++			if (ret) {
++				dev_warn_ratelimited(cpu_dev, "pll_clst1 to %u kHz failed (%d), pll_clst0 put back\n",
++						     freqs->new, ret);
++				if (clk_set_rate(pll_clst0, old_rate))
++					dev_warn_ratelimited(cpu_dev, "pll_clst0 back to %lu Hz failed\n",
++							     old_rate);
++			}
++
++relock:
++			/*
++			 * Switch both PLLs on now, on every turbo transition,
++			 * and wait for them to settle beyond the lock flag, so
++			 * that the OPP layer finds them running and locked
++			 * when it moves the clusters onto them. PLL3 is held
++			 * through pll_src (its /1 output): when scaling down
++			 * the OPP core moves cls1 first (e.g. 2.4 -> 2.2 GHz
++			 * after the park, or 1.5 GHz on PLL2 -> 1.4 GHz), and
++			 * a cluster 1 fed by PLL3 (K3_C1_SRC7_PLL3) would
++			 * switch to a gated output before cls0 turns it on.
++			 * Also after a failure above: a cluster that was parked
++			 * may have gated its PLL.
++			 */
++			spacemit_pll_hold(cpu, cpu_dev, spacemit_pll_src, 0);
++			spacemit_pll_hold(cpu, cpu_dev, pll_clst1, 1);
++			usleep_range(PLL_LOCK_SETTLE_US, 2 * PLL_LOCK_SETTLE_US);
 +		}
-+	}
-+
-+	if (!IS_ERR(clt_pll_src) && !IS_ERR(pll_src))
-+		clk_set_parent(clt_pll_src, pll_src);
-+
-+	if (event == CPUFREQ_POSTCHANGE) {
-+		/* TODO */
 +	}
 +
 +	mutex_unlock(&spacemit_pll_lock);
 +	dev_pm_opp_put_opp_table(opp_table);
 +
-+	return 0;
++	return NOTIFY_OK;
 +}
 +static struct notifier_block spacemit_processor_notifier_block = {
-+       .notifier_call = spacemit_processor_notifier,
-+};
-+
-+static int spacemit_policy_notifier(struct notifier_block *nb,
-+                                  unsigned long event, void *data)
-+{
-+	int cpu;
-+	struct device *cpu_dev;
-+	struct cpufreq_policy *policy = data;
-+	struct opp_table *opp_table;
-+
-+	if (event != CPUFREQ_CREATE_POLICY)
-+		return NOTIFY_DONE;
-+
-+	cpu = cpumask_first(policy->related_cpus);
-+	cpu_dev = get_cpu_device(cpu);
-+	opp_table = _find_opp_table(cpu_dev);
-+	if (IS_ERR_OR_NULL(opp_table))
-+		return NOTIFY_DONE;
-+
-+	if (policy->clk)
-+		clk_put(policy->clk);
-+
-+	/* cover the policy->clk & opp_table->clk which has been set before */
-+	policy->clk = opp_table->clks[0];
-+	opp_table->clk = opp_table->clks[0];
-+
-+	dev_pm_opp_put_opp_table(opp_table);
-+
-+	return 0;
-+}
-+
-+static struct notifier_block spacemit_policy_notifier_block = {
-+       .notifier_call = spacemit_policy_notifier,
++	.notifier_call = spacemit_processor_notifier,
 +};
 +
 +static int spacemit_init_cpufreq_table(struct device *dev,
@@ -518,10 +883,141 @@ Signed-off-by: liberodark <liberodark@gmail.com>
 +	return 0;
 +}
 +
-+static int spacemit_dt_cpufreq_pre_early_init(struct device *dev, int cpu)
++/*
++ * The OPP core judges the current OPP, and so the scale-up/scale-down
++ * order of voltage and clocks, on cls0 alone. Should firmware hand over
++ * with the two clusters at different rates, both are brought down to a
++ * rate no higher than the slower one (the 819.2 MHz source when that is
++ * below it): that never needs more voltage than the rail already provides,
++ * and the first transition brings both to the same OPP.
++ */
++static void spacemit_align_clusters(struct device *cpu_dev)
++{
++	struct clk *clks[2];
++	unsigned long rate[2], target;
++	long rounded;
++	int i;
++
++	clks[0] = clk_get(cpu_dev, "cls0");
++	if (IS_ERR(clks[0]))
++		return;
++	clks[1] = clk_get(cpu_dev, "cls1");
++	if (IS_ERR(clks[1])) {
++		clk_put(clks[0]);
++		return;
++	}
++
++	rate[0] = clk_get_rate(clks[0]);
++	rate[1] = clk_get_rate(clks[1]);
++	if (rate[0] == rate[1])
++		goto put;
++
++	target = min(rate[0], rate[1]);
++	if (target >= STABLE_FREQUENCY)
++		target = STABLE_FREQUENCY;
++	dev_info(cpu_dev, "clusters boot at %lu and %lu MHz, both brought to %lu MHz\n",
++		 rate[0] / 1000000, rate[1] / 1000000, target / 1000000);
++
++	if (idle_guard)
++		spacemit_harts_awake();
++	/* cls1 first, see K3_C1_SRC7_PLL3 */
++	for (i = 1; i >= 0; i--) {
++		if (rate[i] == target)
++			continue;
++		rounded = clk_round_rate(clks[i], target);
++		if (rounded < 0 || rounded > (long)target ||
++		    clk_set_rate(clks[i], target))
++			dev_warn(cpu_dev, "cannot bring cls%d down to %lu MHz\n",
++				 i, target / 1000000);
++	}
++	if (idle_guard)
++		spacemit_harts_release();
++
++put:
++	clk_put(clks[1]);
++	clk_put(clks[0]);
++}
++
++/*
++ * Say which PLL feeds cluster 1 (see K3_C1_SRC7_PLL3). Informative only:
++ * the transition code is safe either way. The CPU clocks come from the
++ * APMU syscon, whose regmap the clock driver already registered.
++ */
++static void spacemit_report_c1_source(struct device *cpu_dev)
++{
++	struct of_phandle_args args;
++	struct regmap *apmu;
++	u32 val;
++
++	if (of_parse_phandle_with_args(cpu_dev->of_node, "clocks",
++				       "#clock-cells", 1, &args))
++		return;
++	apmu = device_node_to_regmap(args.np);
++	of_node_put(args.np);
++	if (IS_ERR(apmu) || regmap_read(apmu, APMU_CPU_C1_CLK_CTRL, &val))
++		return;
++
++	dev_info(cpu_dev, "cluster 1 turbo source: %s\n",
++		 (val & K3_C1_SRC7_PLL3) ? "PLL3, shared with cluster 0 (firmware)" : "PLL4");
++}
++
++/*
++ * No cluster regulator: never run above the frequency firmware handed over,
++ * its voltage is all we will ever have. Disable every OPP above the lower
++ * of the two cluster rates. Fails closed: if the boot rate cannot be
++ * established, or lies below the lowest OPP (cpufreq would raise the
++ * clusters to it at init), the CPUs are better left without cpufreq at all.
++ */
++static int spacemit_cap_opps_at_boot_rate(struct device *cpu_dev)
++{
++	static const char * const names[] = { "cls0", "cls1" };
++	struct dev_pm_opp *opp;
++	unsigned long boot_rate = ULONG_MAX, rate, freq;
++	struct clk *clk;
++	int i, disabled = 0;
++
++	for (i = 0; i < ARRAY_SIZE(names); i++) {
++		clk = clk_get(cpu_dev, names[i]);
++		if (IS_ERR(clk))
++			return PTR_ERR(clk);
++		rate = clk_get_rate(clk);
++		clk_put(clk);
++		if (!rate)
++			return -EINVAL;
++		boot_rate = min(boot_rate, rate);
++	}
++
++	freq = 0;
++	opp = dev_pm_opp_find_freq_ceil_indexed(cpu_dev, &freq, 0);
++	if (IS_ERR(opp))
++		return PTR_ERR(opp);
++	dev_pm_opp_put(opp);
++	if (boot_rate < freq) {
++		dev_err(cpu_dev, "no clst-supply and firmware boot rate %lu MHz below the lowest OPP\n",
++			boot_rate / 1000000);
++		return -ENODEV;
++	}
++
++	freq = boot_rate + 1;
++	while (!IS_ERR(opp = dev_pm_opp_find_freq_ceil_indexed(cpu_dev, &freq, 0))) {
++		dev_pm_opp_put(opp);
++		if (!dev_pm_opp_disable(cpu_dev, freq))
++			disabled++;
++		freq++;
++	}
++
++	if (disabled)
++		dev_info(cpu_dev, "no clst-supply: capped at firmware boot rate %lu MHz, %d OPPs disabled\n",
++			 boot_rate / 1000000, disabled);
++
++	return 0;
++}
++
++int spacemit_k3_cpufreq_early_init(struct device *dev, int cpu)
 +{
 +	struct private_data *priv;
 +	struct device *cpu_dev;
++	struct opp_table *opp_table;
 +	const char *reg_name[] = { "clst", NULL };
 +	const char *clk_name[] = { "cls0", "cls1", NULL };
 +	struct dev_pm_opp_config config = {
@@ -529,41 +1025,74 @@ Signed-off-by: liberodark <liberodark@gmail.com>
 +		.clk_names = clk_name,
 +		.config_clks = dev_pm_opp_config_clks_simple,
 +	};
++	bool have_supply;
 +	int ret;
 +
-+	/* Check if this CPU is already covered by some other policy */
-+	if (cpufreq_dt_find_data(cpu))
-+		return 0;
-+
++	/* dt_cpufreq_early_init() already skipped CPUs covered by a policy */
 +	cpu_dev = get_cpu_device(cpu);
 +	if (!cpu_dev)
 +		return -EPROBE_DEFER;
++
++	/*
++	 * Not a K3, or not a K3 cluster CPU (no cls0/cls1 clocks): generic
++	 * cpufreq-dt path. The machine check matches the notifier's, so a
++	 * two-clock table is never handed to cpufreq-dt without it.
++	 */
++	if (!of_machine_is_compatible("spacemit,k3") ||
++	    of_property_match_string(cpu_dev->of_node, "clock-names", "cls0") < 0)
++		return 0;
 +
 +	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
 +	if (!priv)
 +		return -ENOMEM;
 +
-+	if (!alloc_cpumask_var(&priv->cpus, GFP_KERNEL))
++	if (!zalloc_cpumask_var(&priv->cpus, GFP_KERNEL))
 +		return -ENOMEM;
 +
 +	cpumask_set_cpu(cpu, priv->cpus);
 +	priv->cpu_dev = cpu_dev;
 +
 +	/*
-+	 * Mainline DT does not wire the cluster regulator (clst-supply):
-+	 * keep the firmware-set voltage and only scale frequency. This is
-+	 * safe (never under-volted for the max OPP set by firmware).
++	 * The cluster rail is a PMBus VR that firmware programs before
++	 * handoff. When the board DT wires it (clst-supply), let the OPP
++	 * layer raise the voltage before the frequency. Without it the
++	 * voltage cannot be changed from Linux, so the OPPs above the
++	 * firmware boot frequency are disabled below: firmware may hand
++	 * over at a low OPP and its voltage, and running faster on it
++	 * hangs the cluster.
 +	 */
-+	config.regulator_names = NULL;
++	have_supply = of_property_present(cpu_dev->of_node, "clst-supply");
++	if (!have_supply)
++		config.regulator_names = NULL;
 +	/*
 +	 * OPP layer will be taking care of regulators now, but it needs to know
 +	 * the name of the regulator first.
 +	 */
 +	priv->opp_token = dev_pm_opp_set_config(cpu_dev, &config);
 +	if (priv->opp_token < 0) {
-+		ret = -EPROBE_DEFER;
++		ret = priv->opp_token;
 +		goto free_cpumask;
 +	}
++
++	/*
++	 * The OPP core leaves opp_table->clk unset (ERR_PTR) for a two-clock
++	 * table, but dev_pm_opp_set_rate() rounds the target on it and
++	 * _find_current_opp() reads the boot rate from it. Point it at cls0,
++	 * the OPP core keeps its own clks[] references. policy->clk is
++	 * cpufreq-dt's own handle and is left alone.
++	 */
++	opp_table = _find_opp_table(cpu_dev);
++	if (IS_ERR(opp_table)) {
++		ret = PTR_ERR(opp_table);
++		goto out;
++	}
++	mutex_lock(&opp_table->lock);
++	if (opp_table->clk_count >= 2 && opp_table->clks)
++		opp_table->clk = opp_table->clks[0];
++	mutex_unlock(&opp_table->lock);
++	dev_pm_opp_put_opp_table(opp_table);
++
++	spacemit_report_c1_source(cpu_dev);
 +
 +	/* Get OPP-sharing information from "operating-points-v2" bindings */
 +	ret = dev_pm_opp_of_get_sharing_cpus(cpu_dev, priv->cpus);
@@ -599,6 +1128,16 @@ Signed-off-by: liberodark <liberodark@gmail.com>
 +		goto out;
 +	}
 +
++	/* The cap looks at the boot rates, so it comes before the alignment */
++	if (!have_supply) {
++		ret = spacemit_cap_opps_at_boot_rate(cpu_dev);
++		if (ret) {
++			dev_err(cpu_dev, "cannot establish the firmware boot rate (%d), no cpufreq\n", ret);
++			goto out;
++		}
++	}
++	spacemit_align_clusters(cpu_dev);
++
 +	/*
 +	 * dev_pm_opp_init_cpufreq_table() asserts a single clock per OPP
 +	 * table; build the table manually using the indexed helpers which
@@ -612,7 +1151,7 @@ Signed-off-by: liberodark <liberodark@gmail.com>
 +
 +	cpufreq_dt_add_data(priv);
 +
-+	return 0;
++	return 1;
 +
 +out:
 +	if (priv->have_static_opps)
@@ -623,64 +1162,39 @@ Signed-off-by: liberodark <liberodark@gmail.com>
 +	return ret;
 +}
 +
-+static int spacemit_dt_cpufreq_pre_probe(struct platform_device *pdev)
-+{
-+	int cpu;
-+
-+	if (strncmp(pdev->name, "cpufreq-dt", 10) != 0)
-+		return 0;
-+
-+	for_each_possible_cpu(cpu)
-+		spacemit_dt_cpufreq_pre_early_init(&pdev->dev, cpu);
-+
-+	return 0;
-+}
-+
-+static int __device_notifier_call(struct notifier_block *nb,
-+				      unsigned long event, void *dev)
-+{
-+	struct platform_device *pdev = to_platform_device(dev);
-+
-+	switch (event) {
-+	case BUS_NOTIFY_REMOVED_DEVICE:
-+		break;
-+	case BUS_NOTIFY_UNBOUND_DRIVER:
-+		break;
-+	case BUS_NOTIFY_BIND_DRIVER:
-+		/* here */
-+		spacemit_dt_cpufreq_pre_probe(pdev);
-+		break;
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return NOTIFY_DONE;
-+}
-+
-+static struct notifier_block spacemit_platform_nb = {
-+	.notifier_call = __device_notifier_call,
-+};
-+
 +static int __init spacemit_processor_driver_init(void)
 +{
-+       int ret;
++	int ret;
 +
-+	ret = cpufreq_register_notifier(&spacemit_processor_notifier_block, CPUFREQ_TRANSITION_NOTIFIER);
-+	if (ret) {
-+		pr_err("register cpufreq notifier failed\n");
-+		return -EINVAL;
-+	}
++	if (!of_machine_is_compatible("spacemit,k3"))
++		return 0;
 +
-+       ret = cpufreq_register_notifier(&spacemit_policy_notifier_block, CPUFREQ_POLICY_NOTIFIER);
-+       if (ret) {
-+               pr_err("register cpufreq notifier failed\n");
-+               return -EINVAL;
-+       }
++	ret = cpufreq_register_notifier(&spacemit_processor_notifier_block,
++					CPUFREQ_TRANSITION_NOTIFIER);
++	if (ret)
++		pr_err("register cpufreq transition notifier failed (%d)\n", ret);
 +
-+	bus_register_notifier(&platform_bus_type, &spacemit_platform_nb);
-+
-+       return 0;
++	return ret;
 +}
 +arch_initcall(spacemit_processor_driver_init);
+diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+index 4ccce7b6a..4e8eccfd1 100644
+--- a/drivers/opp/core.c
++++ b/drivers/opp/core.c
+@@ -94,6 +94,16 @@ struct opp_table *_find_opp_table(struct device *dev)
+ static bool assert_single_clk(struct opp_table *opp_table,
+ 			      unsigned int __always_unused index)
+ {
++	/*
++	 * Multi-clock OPP tables driven by dev_pm_opp_config_clks_simple
++	 * keep every clock at the rate of the same OPP entry, so
++	 * frequency-based lookups can safely use the first rate.
++	 */
++	if (IS_ENABLED(CONFIG_SPACEMIT_K3_CPUFREQ) &&
++	    opp_table->clk_count > 1 &&
++	    opp_table->config_clks == dev_pm_opp_config_clks_simple)
++		return true;
++
+ 	return !WARN_ON(opp_table->clk_count > 1);
+ }
+ 

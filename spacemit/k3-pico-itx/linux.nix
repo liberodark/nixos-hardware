@@ -112,6 +112,22 @@ buildLinux (
         name = "k3-22-dts-com260-qspi-nor";
         patch = ./patches/0022-dts-k3-com260-qspi-nor.patch;
       }
+      {
+        name = "k3-23-regulator-aurasemi-au4562";
+        patch = ./patches/0023-regulator-aurasemi-au4562.patch;
+      }
+      {
+        name = "k3-24-dts-pico-itx-au4562-clst-supply";
+        patch = ./patches/0024-dts-k3-pico-itx-au4562-clst-supply.patch;
+      }
+      {
+        name = "k3-25-clk-spacemit-k3-cpu-pll-rate-tables";
+        patch = ./patches/0025-clk-spacemit-k3-add-CPU-PLL-rate-tables.patch;
+      }
+      {
+        name = "k3-26-efi-riscv-spacemit-k3-reset-through-sbi";
+        patch = ./patches/0026-efi-riscv-spacemit-k3-reset-through-sbi.patch;
+      }
     ];
 
     structuredExtraConfig = with lib.kernel; {
@@ -124,6 +140,11 @@ buildLinux (
       CPUFREQ_DT_PLATDEV = option yes;
       SPACEMIT_K3_CPUFREQ = option yes;
       PM_OPP = option yes;
+      # New Regulator
+      REGULATOR_AU4562 = option yes;
+      # Optional
+      I2C_CHARDEV = option module;
+      ###
       SPACEMIT_K3_THERMAL = option yes;
       THERMAL = option yes;
       THERMAL_HWMON = option yes;

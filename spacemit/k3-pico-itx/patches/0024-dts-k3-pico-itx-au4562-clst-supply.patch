@@ -1,0 +1,82 @@
+From 43aaa12de5347e71fcbb149e1057a460294c9d7f Mon Sep 17 00:00:00 2001
+From: liberodark <liberodark@gmail.com>
+Date: Mon, 21 Sep 2026 15:37:18 +0000
+Subject: [PATCH] riscv: dts: spacemit: k3-pico-itx: add the AU4562 cluster VR
+ and clst-supply
+
+The X100 cluster rail on the Pico-ITX is loop A (PMBus page 1) of an
+AU4562 at address 0x75 on i2c8, next to the P1 PMIC. Describe it and
+wire it as clst-supply on the eight cores so cpufreq can scale the
+voltage. Page 0 (the A100 rail) is owned by firmware and left out.
+
+Signed-off-by: liberodark <liberodark@gmail.com>
+---
+ arch/riscv/boot/dts/spacemit/k3-pico-itx.dts | 52 ++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts b/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
+index 55743fdf3..540b9e83e 100644
+--- a/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
++++ b/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
+@@ -218,6 +218,58 @@ dldo7: dldo7 {
+ 			};
+ 		};
+ 	};
++
++	/*
++	 * CPU cluster VR controller. Page 1 feeds the X100 cores; page 0 is
++	 * the A100 rail, which firmware owns and Linux leaves untouched.
++	 */
++	regulator@75 {
++		compatible = "aurasemi,au4562";
++		reg = <0x75>;
++
++		regulators {
++			vdd_x100: vout1 {
++				regulator-name = "vdd08_x100";
++				regulator-min-microvolt = <720000>;
++				regulator-max-microvolt = <1050000>;
++				regulator-ramp-delay = <2500>;
++				regulator-always-on;
++				regulator-boot-on;
++			};
++		};
++	};
++};
++
++&cpu_0 {
++	clst-supply = <&vdd_x100>;
++};
++
++&cpu_1 {
++	clst-supply = <&vdd_x100>;
++};
++
++&cpu_2 {
++	clst-supply = <&vdd_x100>;
++};
++
++&cpu_3 {
++	clst-supply = <&vdd_x100>;
++};
++
++&cpu_4 {
++	clst-supply = <&vdd_x100>;
++};
++
++&cpu_5 {
++	clst-supply = <&vdd_x100>;
++};
++
++&cpu_6 {
++	clst-supply = <&vdd_x100>;
++};
++
++&cpu_7 {
++	clst-supply = <&vdd_x100>;
+ };
+ 
+ &combophy {
+-- 
+2.43.0
+
